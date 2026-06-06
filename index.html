@@ -76,8 +76,15 @@
   .pinlabel{position:absolute; left:0; top:15px; transform:translateX(-50%);
     background:#fff; color:var(--ink); border:1px solid var(--gold); border-radius:8px;
     padding:5px 8px; font-family:'Georgia',serif; font-size:12px; line-height:1.25;
-    width:max-content; max-width:150px; white-space:normal; text-align:center;
+    width:max-content; max-width:172px; white-space:normal; text-align:center;
     box-shadow:0 3px 10px rgba(0,0,0,.35); pointer-events:none;}
+  .pinlabel .lblrec{color:#7a5a14; font-weight:700;}
+  .pinlabel .lblnote{color:var(--ink); margin-top:3px; font-style:italic;}
+  .pinlabel .lblrow{display:flex; gap:5px; align-items:center; justify-content:center; margin-top:5px;}
+  .pinlabel .rbadge{font-size:10px; padding:1px 6px;}
+  .lblvisit{pointer-events:auto; cursor:pointer; border:1px solid var(--ok); background:#fff;
+    color:var(--ok); border-radius:12px; padding:2px 9px; font-family:Arial,sans-serif; font-size:11px;}
+  .lblvisit.on{background:var(--ok); color:#fff;}
   .pinlabel::before{content:""; position:absolute; top:-6px; left:50%; margin-left:-6px;
     border-left:6px solid transparent; border-right:6px solid transparent;
     border-bottom:6px solid var(--gold);}
@@ -406,13 +413,26 @@ function renderPins(){
       pin.style.left = (p.x*100)+'%';
       pin.style.top  = (p.y*100)+'%';
       mapcanvas.appendChild(pin);
-      const note=state.notes[id];
-      if(note){
+      const note=state.notes[id], rec=isRec(e.type,e.num)?RECS[e.num]:null;
+      if(rec||note||rating){
         const anc=document.createElement('div');
         anc.className='pinanchor';
         anc.style.left=(p.x*100)+'%'; anc.style.top=(p.y*100)+'%';
-        const lbl=document.createElement('div');
-        lbl.className='pinlabel'; lbl.textContent=note;
+        const lbl=document.createElement('div'); lbl.className='pinlabel';
+        let html='';
+        if(rec) html+='<div class="lblrec">⭐ '+rec+'</div>';
+        if(note) html+='<div class="lblnote">'+note.replace(/</g,'&lt;')+'</div>';
+        const done=!!state.checked[id];
+        html+='<div class="lblrow">'
+          +(rating?'<span class="rbadge r-'+rating+'">'+RLABEL[rating]+'</span>':'')
+          +'<button class="lblvisit'+(done?' on':'')+'">'+(done?'✓ посещено':'отметить')+'</button>'
+          +'</div>';
+        lbl.innerHTML=html;
+        lbl.querySelector('.lblvisit').onclick=(ev)=>{
+          ev.stopPropagation();
+          if(state.checked[id]) delete state.checked[id]; else state.checked[id]=true;
+          save(); updateProgress(); renderList(); renderPins();
+        };
         anc.appendChild(lbl); mapcanvas.appendChild(anc);
       }
     } else {
