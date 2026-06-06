@@ -125,6 +125,24 @@
     font-family:inherit; font-size:14px; background:#fff;}
   .btn.primary{background:var(--wine2); color:#fff; border-color:var(--wine2);}
   .btn.warn{background:#fff; color:var(--wine2);}
+  .recline{background:#fbf1d8; border:1px solid var(--rec); border-radius:8px;
+    padding:7px 10px; font-size:13px; color:#6a4e12; margin-bottom:10px;}
+  .recline b{color:var(--wine);}
+  .ratewrap{display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap;}
+  .ratelabel{font-size:13px; color:#6a5a48;}
+  .rate{display:flex; gap:6px; flex-wrap:wrap;}
+  .rate button{border:1px solid var(--line); background:#fff; color:var(--ink);
+    border-radius:16px; padding:5px 13px; font-family:inherit; font-size:13px; cursor:pointer;}
+  .rate button.sel[data-r=neoch]{background:var(--r-neoch); color:#fff; border-color:var(--r-neoch);}
+  .rate button.sel[data-r=ok]{background:var(--r-ok); color:#fff; border-color:var(--r-ok);}
+  .rate button.sel[data-r=norm]{background:var(--r-norm); color:#fff; border-color:var(--r-norm);}
+  .rate button.sel[data-r=super]{background:var(--r-super); color:#fff; border-color:var(--r-super);}
+  .visited{display:flex; align-items:center; gap:8px; font-size:14px; margin-bottom:10px; cursor:pointer;}
+  .visited input{width:20px; height:20px; accent-color:var(--ok);}
+  .rbadge{flex:0 0 auto; font-size:11px; font-weight:700; color:#fff; border-radius:10px;
+    padding:2px 8px; align-self:center; font-family:Arial,sans-serif;}
+  .rbadge.r-neoch{background:var(--r-neoch);} .rbadge.r-ok{background:var(--r-ok);}
+  .rbadge.r-norm{background:var(--r-norm);} .rbadge.r-super{background:var(--r-super);}
 
   /* editor bar */
   .editbar{background:#2a1f1f; color:#f6e8d8; padding:8px 12px; border-radius:8px;
@@ -193,7 +211,18 @@
   <div class="card">
     <h3 id="mTitle"></h3>
     <div class="sub" id="mSub"></div>
-    <textarea id="mNote" placeholder="Твои заметки (вкус, цена, понравилось ли)..."></textarea>
+    <div class="recline" id="mRec" style="display:none"></div>
+    <div class="ratewrap">
+      <span class="ratelabel">Оценка:</span>
+      <div class="rate" id="mRate">
+        <button type="button" data-r="neoch">неоч</button>
+        <button type="button" data-r="ok">ок</button>
+        <button type="button" data-r="norm">норм</button>
+        <button type="button" data-r="super">супер</button>
+      </div>
+    </div>
+    <label class="visited"><input type="checkbox" id="mVisited"> Посещено</label>
+    <textarea id="mNote" placeholder="Комментарий (вкус, цена, понравилось ли)..."></textarea>
     <div class="row">
       <button class="btn warn" id="mShow">📍 На карте</button>
       <button class="btn" id="mCancel">Закрыть</button>
@@ -443,19 +472,33 @@ function makeTrayDraggable(pin){
 // ---------- MODAL ----------
 const modal=document.getElementById('modal');
 function openModal(t,n){
-  current={type:t,num:n};
   const id=key(t,n);
+  current={type:t,num:n,rating:state.ratings[id]||''};
   document.getElementById('mTitle').textContent = '#'+n+' · '+nameOf(t,n);
   document.getElementById('mSub').textContent = t==='v'?'Винарија':t==='d'?'Дестилерија':'Food Zone';
+  const recEl=document.getElementById('mRec');
+  if(isRec(t,n)){ recEl.style.display='block';
+    recEl.innerHTML='⭐ <b>Совет сомелье:</b> '+RECS[n]; }
+  else recEl.style.display='none';
   document.getElementById('mNote').value = state.notes[id]||'';
+  document.getElementById('mVisited').checked = !!state.checked[id];
+  syncRateUI();
   modal.classList.add('show');
 }
+function syncRateUI(){
+  document.querySelectorAll('#mRate button').forEach(b=>b.classList.toggle('sel', b.dataset.r===current.rating));
+}
+document.querySelectorAll('#mRate button').forEach(b=>{
+  b.onclick=()=>{ current.rating=(current.rating===b.dataset.r?'':b.dataset.r); syncRateUI(); };
+});
 document.getElementById('mCancel').onclick=()=>modal.classList.remove('show');
 document.getElementById('mSave').onclick=()=>{
   const id=key(current.type,current.num);
   const v=document.getElementById('mNote').value.trim();
   if(v) state.notes[id]=v; else delete state.notes[id];
-  save(); modal.classList.remove('show'); renderList(); renderPins(); toast('Заметка сохранена');
+  if(current.rating) state.ratings[id]=current.rating; else delete state.ratings[id];
+  if(document.getElementById('mVisited').checked) state.checked[id]=true; else delete state.checked[id];
+  save(); modal.classList.remove('show'); renderList(); renderPins(); updateProgress(); toast('Сохранено');
 };
 document.getElementById('mShow').onclick=()=>{
   modal.classList.remove('show');
