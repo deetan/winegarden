@@ -9,6 +9,7 @@
     --wine:#7a1228; --wine2:#a81e3c; --blue:#1f8fd6; --gold:#c98a2b;
     --ink:#2a1f1f; --paper:#f4ece1; --paper2:#ece0cf; --line:#d8c9b3;
     --ok:#2f7d4f;
+    --rec:#caa23a; --r-neoch:#9aa0a6; --r-ok:#e0a818; --r-norm:#3f8ad0; --r-super:#2faa4d;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;}
@@ -55,6 +56,12 @@
   }
   .pin.v{background:var(--wine2);}
   .pin.d{background:var(--blue);}
+  .pin.rec{background:linear-gradient(135deg,#e7c14d,#c2902a); color:#3a2a00;
+    border-color:#fff; box-shadow:0 0 0 2px rgba(201,138,43,.35),0 1px 5px rgba(0,0,0,.55);}
+  .pin.r-neoch{box-shadow:0 0 0 3px var(--r-neoch),0 1px 4px rgba(0,0,0,.5);}
+  .pin.r-ok{box-shadow:0 0 0 3px var(--r-ok),0 1px 4px rgba(0,0,0,.5);}
+  .pin.r-norm{box-shadow:0 0 0 3px var(--r-norm),0 1px 4px rgba(0,0,0,.5);}
+  .pin.r-super{box-shadow:0 0 0 3px var(--r-super),0 1px 4px rgba(0,0,0,.5);}
   .pin.done{outline:3px solid var(--ok); outline-offset:1px;}
   .pin.hl{z-index:10; box-shadow:0 0 0 4px #ffd45e, 0 2px 8px rgba(0,0,0,.6);}
   .pin.hl::after{content:""; position:absolute; inset:-6px; border-radius:50%;
@@ -161,7 +168,11 @@
       </div>
       <div class="tray" id="tray" style="display:none"></div>
     </div>
-    <div class="hint">🔴 Винарије &nbsp; 🔵 Дестилерије</div>
+    <div class="hint">
+      <span class="dot" style="background:linear-gradient(135deg,#e7c14d,#c2902a)"></span>Рекомендации сомелье &nbsp;
+      <span class="dot" style="background:var(--wine2)"></span>Винарије &nbsp;
+      <span class="dot" style="background:var(--blue)"></span>Дестилерије
+    </div>
   </div>
 
   <!-- LIST PANEL -->
@@ -202,10 +213,34 @@ const POS_KEY = 'winegarden2026_pos';
 const DEFAULT_POS = {"v-1": {"x": 0.4536, "y": 0.922, "placed": true}, "v-2": {"x": 0.475, "y": 0.919, "placed": true}, "v-3": {"x": 0.4971, "y": 0.916, "placed": true}, "v-4": {"x": 0.52, "y": 0.9151, "placed": true}, "v-5": {"x": 0.5364, "y": 0.8877, "placed": true}, "v-6": {"x": 0.5307, "y": 0.8654, "placed": true}, "v-7": {"x": 0.5229, "y": 0.843, "placed": true}, "v-8": {"x": 0.5121, "y": 0.8187, "placed": true}, "v-9": {"x": 0.5043, "y": 0.7948, "placed": true}, "v-10": {"x": 0.495, "y": 0.768, "placed": true}, "v-11": {"x": 0.4864, "y": 0.7412, "placed": true}, "v-12": {"x": 0.4679, "y": 0.7144, "placed": true}, "v-13": {"x": 0.4371, "y": 0.6816, "placed": true}, "v-14": {"x": 0.3971, "y": 0.6448, "placed": true}, "v-15": {"x": 0.37, "y": 0.5976, "placed": true}, "v-16": {"x": 0.3407, "y": 0.611, "placed": true}, "v-17": {"x": 0.3221, "y": 0.5986, "placed": true}, "v-18": {"x": 0.3014, "y": 0.5867, "placed": true}, "v-19": {"x": 0.2807, "y": 0.5748, "placed": true}, "v-20": {"x": 0.2843, "y": 0.544, "placed": true}, "v-21": {"x": 0.2536, "y": 0.5579, "placed": true}, "v-22": {"x": 0.2336, "y": 0.5469, "placed": true}, "v-23": {"x": 0.2636, "y": 0.533, "placed": true}, "v-24": {"x": 0.2536, "y": 0.5171, "placed": true}, "v-25": {"x": 0.27, "y": 0.4998, "placed": true}, "v-26": {"x": 0.2836, "y": 0.5216, "placed": true}, "v-27": {"x": 0.2964, "y": 0.5022, "placed": true}, "v-28": {"x": 0.3114, "y": 0.5286, "placed": true}, "v-29": {"x": 0.3207, "y": 0.5102, "placed": true}, "v-30": {"x": 0.3443, "y": 0.538, "placed": true}, "v-31": {"x": 0.3514, "y": 0.5191, "placed": true}, "v-32": {"x": 0.3729, "y": 0.543, "placed": true}, "v-33": {"x": 0.3821, "y": 0.5231, "placed": true}, "v-34": {"x": 0.2364, "y": 0.4943, "placed": true}, "v-35": {"x": 0.2129, "y": 0.4848, "placed": true}, "v-36": {"x": 0.2486, "y": 0.4794, "placed": true}, "v-37": {"x": 0.2221, "y": 0.463, "placed": true}, "d-38": {"x": 0.2657, "y": 0.4744, "placed": true}, "d-39": {"x": 0.2886, "y": 0.4759, "placed": true}, "v-40": {"x": 0.1843, "y": 0.4704, "placed": true}, "v-41": {"x": 0.1471, "y": 0.465, "placed": true}, "v-42": {"x": 0.1536, "y": 0.4307, "placed": true}, "v-43": {"x": 0.1386, "y": 0.3974, "placed": true}, "v-44": {"x": 0.0971, "y": 0.3984, "placed": true}, "v-45": {"x": 0.09, "y": 0.3825, "placed": true}, "v-46": {"x": 0.11, "y": 0.3433, "placed": true}, "v-47": {"x": 0.1221, "y": 0.3408, "placed": true}, "v-48": {"x": 0.1336, "y": 0.3398, "placed": true}, "v-49": {"x": 0.1464, "y": 0.3378, "placed": true}, "v-50": {"x": 0.1657, "y": 0.3373, "placed": true}, "v-51": {"x": 0.19, "y": 0.3363, "placed": true}, "v-52": {"x": 0.2414, "y": 0.3343, "placed": true}, "v-53": {"x": 0.2071, "y": 0.2608, "placed": true}, "v-54": {"x": 0.1421, "y": 0.2072, "placed": true}, "v-55": {"x": 0.1457, "y": 0.1624, "placed": true}, "v-56": {"x": 0.1714, "y": 0.1619, "placed": true}, "v-57": {"x": 0.19, "y": 0.1605, "placed": true}, "v-58": {"x": 0.2114, "y": 0.16, "placed": true}, "v-59": {"x": 0.2307, "y": 0.1585, "placed": true}, "v-60": {"x": 0.25, "y": 0.1595, "placed": true}, "v-61": {"x": 0.2657, "y": 0.1605, "placed": true}, "v-62": {"x": 0.2814, "y": 0.1619, "placed": true}, "v-63": {"x": 0.2957, "y": 0.1649, "placed": true}, "v-64": {"x": 0.3064, "y": 0.1744, "placed": true}, "v-65": {"x": 0.3229, "y": 0.1754, "placed": true}, "v-66": {"x": 0.3436, "y": 0.1759, "placed": true}, "v-67": {"x": 0.355, "y": 0.1679, "placed": true}, "v-68": {"x": 0.3643, "y": 0.1769, "placed": true}, "v-69": {"x": 0.3843, "y": 0.1769, "placed": true}, "v-70": {"x": 0.445, "y": 0.1793, "placed": true}, "v-71": {"x": 0.4157, "y": 0.1788, "placed": true}, "v-72": {"x": 0.4714, "y": 0.1788, "placed": true}, "v-73": {"x": 0.4943, "y": 0.1773, "placed": true}, "v-74": {"x": 0.5171, "y": 0.1759, "placed": true}, "v-75": {"x": 0.5193, "y": 0.1947, "placed": true}, "v-76": {"x": 0.5214, "y": 0.2067, "placed": true}, "v-77": {"x": 0.5229, "y": 0.2191, "placed": true}, "v-78": {"x": 0.5186, "y": 0.2335, "placed": true}, "v-79": {"x": 0.5157, "y": 0.2509, "placed": true}, "d-80": {"x": 0.4, "y": 0.2335, "placed": true}, "v-81": {"x": 0.4136, "y": 0.3125, "placed": true}};
 
 // state: {checked:{type-num:true}, notes:{type-num:"..."}}
-let state = load(STORE_KEY) || {checked:{}, notes:{}};
+let state = load(STORE_KEY) || {checked:{}, notes:{}, ratings:{}};
+if(!state.checked) state.checked={};
+if(!state.notes) state.notes={};
+if(!state.ratings) state.ratings={};
 let pos = load(POS_KEY) || JSON.parse(JSON.stringify(DEFAULT_POS));
 let editMode = false;
-let current = null; // {type,num}
+let current = null; // {type,num,rating}
+
+// ---- Sommelier picks (Надежда Проценко): vinarija number -> what to try ----
+const RECS = {
+  77:'Совиньон блан и морава', 15:'Тамянике', 72:'Купаж «Путник»',
+  18:'Грашац и прокупац', 79:'Морава, оранж из моравы',
+  22:'Семильон, Domine кюве, десертные', 50:'Португизер, бермет',
+  37:'Совиньон блан', 78:'Каберне, мерло, совиньон блан «СовиНоа»',
+  58:'Moma, Veca, пет-наты', 76:'Морава, прокупац',
+  34:'Corvus, merula, picus, solaris', 51:'Игристое, грашац, бермет',
+  17:'Ягода', 70:'Игристое', 71:'Оранж из тамянике',
+  49:'Каберне фран, пробус', 68:'Совиньон блан', 73:'Шардоне',
+  47:'Пти вердо, рислинг', 62:'Пино нуар',
+  61:'Оранж из грашца, вариации грашца', 21:'Doajen',
+  20:'Тамянике, прокупац', 55:'Премиум линейки S и R',
+  10:'Молдавия', 13:'Босния и Герцеговина', 14:'Хорватия'
+};
+// display order from the sommelier's note (Serbian picks first, then foreign)
+const RECS_ORDER = [77,15,72,18,79,22,50,37,78,58,76,34,51,17,70,71,49,68,73,47,62,61,21,20,55,10,13,14];
+const FOREIGN = {10:1,13:1,14:1};
+const RLABEL = {neoch:'неоч', ok:'ок', norm:'норм', super:'супер'};
+const isRec = (t,n)=> t==='v' && RECS[n]!==undefined;
 
 function load(k){try{return JSON.parse(localStorage.getItem(k));}catch(e){return null;}}
 function save(){localStorage.setItem(STORE_KEY, JSON.stringify(state));}
@@ -320,7 +355,11 @@ function renderPins(){
     const id = key(e.type,e.num);
     const p = pos[id];
     const pin = document.createElement('div');
-    pin.className = 'pin '+e.type + (state.checked[id]?' done':'');
+    const rating = state.ratings[id];
+    pin.className = 'pin '+e.type
+      + (isRec(e.type,e.num)?' rec':'')
+      + (rating?' r-'+rating:'')
+      + (state.checked[id]?' done':'');
     pin.textContent = e.num;
     pin.dataset.id = id;
     pin.dataset.type = e.type;
