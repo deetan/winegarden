@@ -78,7 +78,11 @@
     padding:5px 8px; font-family:'Georgia',serif; font-size:12px; line-height:1.25;
     width:max-content; max-width:172px; white-space:normal; text-align:center;
     box-shadow:0 3px 10px rgba(0,0,0,.35); pointer-events:none;}
-  .pinlabel .lblrec{color:#7a5a14; font-weight:700;}
+  .pinlabel .lblname{font-weight:700; color:var(--wine); font-family:'Georgia',serif;}
+  .pinlabel.rec{border-color:var(--rec);}
+  .pinlabel.rec .lblname{color:#7a5a14;}
+  .pinlabel.nameonly{padding:3px 8px; max-width:140px; border-color:var(--line);}
+  .pinlabel .lblrec{color:#7a5a14; font-weight:700; margin-top:3px;}
   .pinlabel .lblnote{color:var(--ink); margin-top:3px; font-style:italic;}
   .pinlabel .lblrow{display:flex; gap:5px; align-items:center; justify-content:center; margin-top:5px;}
   .pinlabel .rbadge{font-size:10px; padding:1px 6px;}
@@ -415,28 +419,32 @@ function renderPins(){
       pin.style.left = (p.x*100)+'%';
       pin.style.top  = (p.y*100)+'%';
       mapcanvas.appendChild(pin);
-      const note=state.notes[id], rec=isRec(e.type,e.num)?RECS[e.num]:null;
-      if(rec||note||rating){
-        const anc=document.createElement('div');
-        anc.className='pinanchor';
-        anc.style.left=(p.x*100)+'%'; anc.style.top=(p.y*100)+'%';
-        const lbl=document.createElement('div'); lbl.className='pinlabel';
-        let html='';
-        if(rec) html+='<div class="lblrec">⭐ '+rec+'</div>';
-        if(note) html+='<div class="lblnote">'+note.replace(/</g,'&lt;')+'</div>';
-        const done=!!state.checked[id];
+      // bubble shown on zoom: name for every place, plus details where present
+      const note=state.notes[id], rec=isRec(e.type,e.num)?RECS[e.num]:null, done=!!state.checked[id];
+      const esc=s=>s.replace(/</g,'&lt;');
+      const rich = rec||note||rating;
+      const anc=document.createElement('div');
+      anc.className='pinanchor';
+      anc.style.left=(p.x*100)+'%'; anc.style.top=(p.y*100)+'%';
+      const lbl=document.createElement('div');
+      lbl.className='pinlabel'+(rec?' rec':'')+(rich?'':' nameonly');
+      let html='<div class="lblname">'+esc(nameOf(e.type,e.num))+'</div>';
+      if(rec) html+='<div class="lblrec">⭐ '+rec+'</div>';
+      if(note) html+='<div class="lblnote">'+esc(note)+'</div>';
+      if(rich){
         html+='<div class="lblrow">'
           +(rating?'<span class="rbadge r-'+rating+'">'+RLABEL[rating]+'</span>':'')
-          +'<button class="lblvisit'+(done?' on':'')+'">'+(done?'✓ посещено':'отметить')+'</button>'
+          +'<button class="lblvisit'+(done?' on':'')+'">'+(done?'✓ был(а)':'отметить')+'</button>'
           +'</div>';
-        lbl.innerHTML=html;
-        lbl.querySelector('.lblvisit').onclick=(ev)=>{
-          ev.stopPropagation();
-          if(state.checked[id]) delete state.checked[id]; else state.checked[id]=true;
-          save(); updateProgress(); renderList(); renderPins();
-        };
-        anc.appendChild(lbl); mapcanvas.appendChild(anc);
       }
+      lbl.innerHTML=html;
+      const vb=lbl.querySelector('.lblvisit');
+      if(vb) vb.onclick=(ev)=>{
+        ev.stopPropagation();
+        if(state.checked[id]) delete state.checked[id]; else state.checked[id]=true;
+        save(); updateProgress(); renderList(); renderPins();
+      };
+      anc.appendChild(lbl); mapcanvas.appendChild(anc);
     } else {
       // unplaced -> tray (only visible in edit mode)
       tray.appendChild(pin);
@@ -520,8 +528,19 @@ function syncRateUI(){
   document.querySelectorAll('#mRate button').forEach(b=>b.classList.toggle('sel', b.dataset.r===current.rating));
 }
 document.querySelectorAll('#mRate button').forEach(b=>{
-  b.onclick=()=>{ current.rating=(current.rating===b.dataset.r?'':b.dataset.r); syncRateUI(); };
+  b.onclick=()=>{
+    current.rating=(current.rating===b.dataset.r?'':b.dataset.r);
+    const id=key(current.type,current.num);
+    if(current.rating) state.ratings[id]=current.rating; else delete state.ratings[id];
+    save(); syncRateUI(); renderPins(); renderList();
+    toast(current.rating?'Оценка: '+RLABEL[current.rating]:'Оценка снята');
+  };
 });
+document.getElementById('mVisited').onchange=function(){
+  const id=key(current.type,current.num);
+  if(this.checked) state.checked[id]=true; else delete state.checked[id];
+  save(); renderPins(); renderList(); updateProgress();
+};
 document.getElementById('mCancel').onclick=()=>modal.classList.remove('show');
 document.getElementById('mSave').onclick=()=>{
   const id=key(current.type,current.num);
