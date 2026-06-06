@@ -109,6 +109,16 @@
   .section-title{font-size:15px; font-weight:700; color:var(--wine); margin:16px 2px 6px;
      border-bottom:2px solid var(--line); padding-bottom:4px; letter-spacing:.5px;}
   .item.done .nm{text-decoration:line-through; opacity:.55;}
+  .recintro{margin:6px 2px 12px;}
+  .recintro h2{color:var(--wine); font-size:19px; margin:0 0 6px;}
+  .recintro p{font-size:13px; line-height:1.45; margin:0 0 6px; color:#4a3b2e;}
+  .recintro p.muted{font-size:12px; color:#6a5a48;}
+  #listbody{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:6px;}
+  .rec-item{align-items:center;}
+  .num.rec{background:linear-gradient(135deg,#e7c14d,#c2902a); color:#3a2a00;}
+  .recmeta{flex:1; min-width:0;}
+  .recwine{font-size:12px; color:#7a5a2a; line-height:1.25; margin-top:2px;}
+  .flag{font-size:12px; color:#1f6f9c; font-weight:400;}
 
   /* modal */
   .modal{position:fixed; inset:0; background:rgba(40,25,25,.55); display:none;
@@ -164,10 +174,6 @@
 <body>
 <header>
   <h1>WINE GARDEN <small>2026 · ИНТЕРАКТИВНАЯ КАРТА</small></h1>
-  <div class="tabs">
-    <button class="tab active" data-panel="map">🗺️ Карта</button>
-    <button class="tab" data-panel="list">📋 Чек-лист</button>
-  </div>
   <div class="progress" id="progress"></div>
 </header>
 
@@ -193,14 +199,17 @@
     </div>
   </div>
 
-  <!-- LIST PANEL -->
-  <div class="panel" id="panel-list">
-    <input class="search" id="search" placeholder="🔍 Поиск по названию или номеру...">
+  <!-- RECOMMENDATIONS -->
+  <div class="panel active" id="panel-list">
+    <div class="recintro">
+      <h2>Что попробовать в первую очередь</h2>
+      <p>Самое известное летнее винное событие — уже в эти выходные. Вина, которые стоит попробовать первыми: редкие, интересные новинки, дорогие. Рекомендации сомелье <b>Надежды Проценко</b>, эксперта по сербским винам.</p>
+      <p class="muted">Нажми на карточку — карта приблизится к месту. Галочка — «посещено», а оценку (неоч/ок/норм/супер) ставь, нажав на точку на карте.</p>
+    </div>
     <div class="legend">
-      <span><span class="dot" style="background:var(--wine2)"></span>Винарије</span>
-      <span><span class="dot" style="background:var(--blue)"></span>Дестилерије</span>
-      <span><span class="dot" style="background:var(--gold)"></span>Food Zone</span>
-      <button class="btn warn" id="clearAll" style="margin-left:auto;font-size:12px;padding:5px 10px;">Сбросить весь чек-лист</button>
+      <span><span class="dot" style="background:linear-gradient(135deg,#e7c14d,#c2902a)"></span>в рекомендациях</span>
+      <span><span class="dot" style="background:var(--wine2)"></span>остальные</span>
+      <button class="btn warn" id="clearAll" style="margin-left:auto;font-size:12px;padding:5px 10px;">Сбросить всё</button>
     </div>
     <div id="listbody"></div>
   </div>
@@ -524,78 +533,47 @@ function highlightOnMap(t,n){
 // ---------- LIST ----------
 const listbody=document.getElementById('listbody');
 function renderList(){
-  const q=(document.getElementById('search').value||'').toLowerCase().trim();
   listbody.innerHTML='';
-  const sections=[
-    {title:'🍷 Винарије', type:'v', obj:DATA.vinarije},
-    {title:'🥃 Дестилерије', type:'d', obj:DATA.destilerije},
-    {title:'🧀 Food Zone', type:'f', obj:DATA.food},
-  ];
-  sections.forEach(sec=>{
-    const nums=Object.keys(sec.obj).map(Number).sort((a,b)=>a-b)
-      .filter(n=>{
-        if(!q) return true;
-        return (''+n).includes(q) || sec.obj[n].toLowerCase().includes(q);
-      });
-    if(!nums.length) return;
-    const h=document.createElement('div'); h.className='section-title'; h.textContent=sec.title;
-    listbody.appendChild(h);
-    const grid=document.createElement('div'); grid.className='grid';
-    nums.forEach(n=>{
-      const id=key(sec.type,n);
-      const done=!!state.checked[id];
-      const hasNote=!!state.notes[id];
-      const it=document.createElement('div');
-      it.className='item'+(done?' done':'');
-      it.dataset.id=id;
-      it.innerHTML=`
-        <span class="num ${sec.type}">${n}</span>
-        <span class="nm">${sec.obj[n]}</span>
-        <button class="note-btn ${hasNote?'has':''}" title="Заметка">📝</button>
-        <label class="chk"><input type="checkbox" ${done?'checked':''}></label>`;
-      // checkbox
-      it.querySelector('input').onclick=(e)=>{
-        e.stopPropagation();
-        if(e.target.checked) state.checked[id]=true; else delete state.checked[id];
-        save(); it.classList.toggle('done'); updateProgress(); renderPins();
-      };
-      // note
-      it.querySelector('.note-btn').onclick=(e)=>{e.stopPropagation();openModal(sec.type,n);};
-      // click row: only map-able types jump to map
-      it.onclick=()=>{
-        document.querySelectorAll('.item.hl').forEach(x=>x.classList.remove('hl'));
-        it.classList.add('hl');
-        if(sec.type==='f'){ openModal('f',n); }
-        else { switchPanel('map'); highlightOnMap(sec.type,n); }
-      };
-      grid.appendChild(it);
-    });
-    listbody.appendChild(grid);
+  RECS_ORDER.forEach(n=>{
+    const id='v-'+n, name=DATA.vinarije[n], rec=RECS[n];
+    const done=!!state.checked[id], rating=state.ratings[id], foreign=!!FOREIGN[n];
+    const it=document.createElement('div');
+    it.className='item rec-item'+(done?' done':'');
+    it.dataset.id=id;
+    it.innerHTML=
+      '<span class="num rec">'+n+'</span>'+
+      '<div class="recmeta"><div class="nm">'+name+(foreign?' <span class="flag">· '+rec+'</span>':'')+'</div>'+
+      (foreign?'':'<div class="recwine">🍷 '+rec+'</div>')+'</div>'+
+      (rating?'<span class="rbadge r-'+rating+'">'+RLABEL[rating]+'</span>':'')+
+      '<label class="chk"><input type="checkbox" '+(done?'checked':'')+'></label>';
+    it.querySelector('input').onclick=(e)=>{
+      e.stopPropagation();
+      if(e.target.checked) state.checked[id]=true; else delete state.checked[id];
+      save(); it.classList.toggle('done'); updateProgress(); renderPins();
+    };
+    it.onclick=()=>{
+      document.querySelectorAll('.item.hl').forEach(x=>x.classList.remove('hl'));
+      it.classList.add('hl');
+      highlightOnMap('v',n);
+    };
+    listbody.appendChild(it);
   });
 }
-document.getElementById('search').oninput=renderList;
 document.getElementById('clearAll').onclick=()=>{
-  if(confirm('Сбросить все галочки и заметки? Это нельзя отменить.')){
-    state={checked:{},notes:{}}; save(); renderList(); renderPins(); updateProgress(); toast('Чек-лист очищен');
+  if(confirm('Сбросить все галочки, оценки и комментарии? Это нельзя отменить.')){
+    state={checked:{},notes:{},ratings:{}}; save(); renderList(); renderPins(); updateProgress(); toast('Сброшено');
   }
 };
 
 function updateProgress(){
-  const totalMap=mapEntries.length;
-  let doneMap=0; mapEntries.forEach(e=>{if(state.checked[key(e.type,e.num)])doneMap++;});
-  const totalFood=Object.keys(DATA.food).length;
-  let doneFood=0; Object.keys(DATA.food).forEach(n=>{if(state.checked['f-'+n])doneFood++;});
+  const recDone=RECS_ORDER.filter(n=>state.checked['v-'+n]).length;
+  let totalDone=0; mapEntries.forEach(e=>{if(state.checked[key(e.type,e.num)])totalDone++;});
   document.getElementById('progress').textContent=
-    `Посещено: ${doneMap}/${totalMap} вино/дестил · ${doneFood}/${totalFood} food`;
+    `⭐ ${recDone}/${RECS_ORDER.length} рекомендаций · посещено всего ${totalDone}`;
 }
 
-// ---------- TABS ----------
-function switchPanel(name){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.panel===name));
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  document.getElementById('panel-'+name).classList.add('active');
-}
-document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>switchPanel(t.dataset.panel));
+// scroll the map into view (used when jumping from the list / modal)
+function switchPanel(){ mapbox.scrollIntoView({behavior:'smooth',block:'start'}); }
 
 // ---------- EDIT MODE ----------
 document.getElementById('editToggle').onclick=(e)=>{
